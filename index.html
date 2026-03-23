@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Personagem RPG</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script defer src="firebase-config.js"></script>
+</head>
+<body>
+    <!-- Cloud Status Bar -->
+    <div class="cloud-status-bar">
+        <div class="cloud-status-left">
+            <span class="cloud-sync-indicator" id="cloudSyncIndicator" title="Desconectado da nuvem">●</span>
+            <span class="cloud-status-text" id="cloudStatusText">Nuvem: Desconectado</span>
+            <span class="cloud-user-info" id="cloudUserInfo"></span>
+        </div>
+        <div class="cloud-status-right">
+            <button class="cloud-btn" onclick="abrirLoginModal()" id="cloudLoginBtn">Login</button>
+            <button class="cloud-btn" onclick="fazerLogout()" id="cloudLogoutBtn" style="display:none;">Logout</button>
+        </div>
+    </div>
+
+    <!-- Modal de Login -->
+    <div class="cloud-modal" id="cloudModal">
+        <div class="cloud-modal-content">
+            <div class="cloud-modal-header">
+                <h2>Conectar à Nuvem</h2>
+                <button class="cloud-modal-close" onclick="fecharLoginModal()">×</button>
+            </div>
+            <div class="cloud-modal-body">
+                <p style="color: #ccc; margin-bottom: 15px;">Salvar em Núvem</p>
+                
+                <div class="cloud-tabs">
+                    <button class="cloud-tab-btn active" onclick="mudarAbaLogin('email')">Email</button>
+                    <button class="cloud-tab-btn" onclick="mudarAbaLogin('anon')">Anônimo (Teste)</button>
+                </div>
+
+                <!-- Aba de Email -->
+                <div class="cloud-tab-content active" id="cloud-tab-email">
+                    <div class="form-group">
+                        <label for="cloudEmail">Email</label>
+                        <input type="email" id="cloudEmail" placeholder="seu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="cloudPassword">Senha</label>
+                        <input type="password" id="cloudPassword" placeholder="Digite sua senha">
+                    </div>
+                    <button class="cloud-modal-btn" onclick="loginComEmail()">Entrar</button>
+                    <button class="cloud-modal-btn secondary" onclick="registrarComEmail()">Criar Conta</button>
+                    <div class="cloud-error" id="cloudError"></div>
+                </div>
+
+                <!-- Aba Anônima -->
+                <div class="cloud-tab-content" id="cloud-tab-anon">
+                    <p style="color: #aaa; font-size: 0.9em; margin-bottom: 15px;">
+                        Teste da nuvem(Ignorar se for jogador)
+                        <strong>Nota:</strong> Seus dados serão sincronizados mas podem ser perdidos.
+                    </p>
+                    <button class="cloud-modal-btn" onclick="loginAnonimo()">Entrar como Anônimo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dice Roller Sidebar -->
+    <div class="dice-sidebar">
+        <div class="dice-header" onclick="toggleDiceSidebar()">
+            <div class="dice-header-title">
+                <span class="dice-toggle-btn">›</span>
+                <span>DADOS</span>
+            </div>
+        </div>
+        <div class="dice-content">
+            <div class="dice-group">
+                <div class="dice-group-title">D4</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD4" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(4)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">D6</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD6" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(6)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">D8</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD8" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(8)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">D10</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD10" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(10)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">D12</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD12" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(12)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">D20</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD20" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(20)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">D100</div>
+                <div class="dice-input-row">
+                    <input type="number" id="quantityD100" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDados(100)">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-group">
+                <div class="dice-group-title">Dado Customizado</div>
+                <div class="dice-input-row custom-dice-input">
+                    <input type="number" id="customDiceSides" value="20" min="1" max="1000" placeholder="Lados">
+                    <input type="number" id="customDiceQuantity" value="1" min="1" max="10" placeholder="Qtd">
+                    <button class="dice-roll-btn" onclick="rolarDadosCustom()">Rolar</button>
+                </div>
+            </div>
+            <div class="dice-result" id="diceResult" style="display: none;">
+                <div class="dice-result-label">Resultado</div>
+                <div class="dice-result-value" id="diceResultValue">-</div>
+            </div>
+            <div class="dice-history" id="diceHistory"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Ficha de Personagem</h1>
+            <div class="button-group">
+                <button onclick="salvarPersonagemNuvem()" class="btn-cloud" id="btnSalvarNuvem" style="display:none;" title="Salvar na nuvem">Salvar na Nuvem</button>
+                <button onclick="carregarPersonagemNuvem()" class="btn-cloud" id="btnCarregarNuvem" style="display:none;" title="Carregar da nuvem">Carregar da Nuvem</button>
+                <button onclick="salvarPersonagem()">Baixar Ficha</button>
+                <button class="btn-secondary" onclick="document.getElementById('arquivoInput').click()">Carregar Ficha</button>
+                <button class="btn-secondary" onclick="limparPersonagem()">Limpar Tudo</button>
+            </div>
+        </div>
+
+        <!-- Informações Básicas -->
+        <div class="grid-2">
+            <div class="section">
+                <div class="section-title">Informações Básicas</div>
+                <div class="form-group">
+                    <label for="nome">Nome do Personagem</label>
+                    <input type="text" id="nome" placeholder="Nome">
+                </div>
+                <div class="form-group">
+                    <label for="classe">Afinidade</label>
+                    <input type="text" id="classe" placeholder="Afinidade">
+                </div>
+                <div class="form-group">
+                    <label for="nivel">Nível</label>
+                    <input type="number" id="nivel" placeholder="1" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="ca">Classe de Armadura</label>
+                    <input type="number" id="ca" placeholder="10" min="0" value="10">
+                </div>
+            </div>
+
+            <!-- Atributos -->
+            <div class="section">
+                <div class="section-title">Atributos</div>
+                <div class="grid-3">
+                    <div class="attribute-box">
+                        <div class="attribute-name">Corpo</div>
+                        <input type="number" id="corpo" placeholder="0" min="0" value="10" style="width: 100%; text-align: center; font-size: 1.2em; margin-bottom: 5px;">
+                    </div>
+                    <div class="attribute-box">
+                        <div class="attribute-name">Agilidade</div>
+                        <input type="number" id="agilidade" placeholder="0" min="0" value="10" style="width: 100%; text-align: center; font-size: 1.2em; margin-bottom: 5px;">
+                    </div>
+                    <div class="attribute-box">
+                        <div class="attribute-name">Mente</div>
+                        <input type="number" id="mente" placeholder="0" min="0" value="10" style="width: 100%; text-align: center; font-size: 1.2em; margin-bottom: 5px;">
+                    </div>
+                    <div class="attribute-box">
+                        <div class="attribute-name">Espírito</div>
+                        <input type="number" id="espirit" placeholder="0" min="0" value="10" style="width: 100%; text-align: center; font-size: 1.2em; margin-bottom: 5px;">
+                    </div>
+                    <div class="attribute-box">
+                        <div class="attribute-name">Presença</div>
+                        <input type="number" id="presenca" placeholder="0" min="0" value="10" style="width: 100%; text-align: center; font-size: 1.2em; margin-bottom: 5px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pontos Vitais -->
+        <div class="grid-3">
+            <div class="section">
+                <div class="section-title">Pontos de Vida</div>
+                <span class="point-label">PV</span>
+                <div class="point-display">
+                    <span class="point-value"><span id="pvAtual">20</span> / <span id="pvMax">20</span></span>
+                </div>
+                <div class="point-controls">
+                    <button onclick="modificarPonto('pv', -1)">-</button>
+                    <button onclick="modificarPonto('pv', 1)">+</button>
+                </div>
+                <div class="point-inputs">
+                    <div class="form-group">
+                        <label>Atual</label>
+                        <input type="number" id="pvAtualInput" placeholder="20" min="0" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Máximo</label>
+                        <input type="number" id="pvMaxInput" placeholder="20" min="1" value="20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Pontos de Espírito</div>
+                <span class="point-label">PE</span>
+                <div class="point-display">
+                    <span class="point-value"><span id="peAtual">15</span> / <span id="peMax">15</span></span>
+                </div>
+                <div class="point-controls">
+                    <button onclick="modificarPonto('pe', -1)">-</button>
+                    <button onclick="modificarPonto('pe', 1)">+</button>
+                </div>
+                <div class="point-inputs">
+                    <div class="form-group">
+                        <label>Atual</label>
+                        <input type="number" id="peAtualInput" placeholder="15" min="0" value="15">
+                    </div>
+                    <div class="form-group">
+                        <label>Máximo</label>
+                        <input type="number" id="peMaxInput" placeholder="15" min="1" value="15">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Pontos de Sanidade</div>
+                <span class="point-label">SAN</span>
+                <div class="point-display">
+                    <span class="point-value"><span id="sanAtual">10</span> / <span id="sanMax">10</span></span>
+                </div>
+                <div class="point-controls">
+                    <button onclick="modificarPonto('san', -1)">-</button>
+                    <button onclick="modificarPonto('san', 1)">+</button>
+                </div>
+                <div class="point-inputs">
+                    <div class="form-group">
+                        <label>Atual</label>
+                        <input type="number" id="sanAtualInput" placeholder="10" min="0" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Máximo</label>
+                        <input type="number" id="sanMaxInput" placeholder="10" min="1" value="10">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Habilidades/Perícias -->
+        <div class="section full-width">
+            <div class="section-title">H.U</div>
+            <div class="skill-container">
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-habilidade1')"><span class="chevron">›</span> Sua H.U</div>
+                    <div class="skill-content" id="skill-habilidade1-content">
+                        <textarea id="habilidade1" placeholder="Sua H.U" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia1')"><span class="chevron">›</span> Habilidade 1</div>
+                    <div class="skill-content" id="skill-pericia1-content">
+                        <textarea id="pericia1" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia2')"><span class="chevron">›</span> Habilidade 2</div>
+                    <div class="skill-content" id="skill-pericia2-content">
+                        <textarea id="pericia2" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia3')"><span class="chevron">›</span> Habilidade 3</div>
+                    <div class="skill-content" id="skill-pericia3-content">
+                        <textarea id="pericia3" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia4')"><span class="chevron">›</span> Habilidade 4</div>
+                    <div class="skill-content" id="skill-pericia4-content">
+                        <textarea id="pericia4" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia5')"><span class="chevron">›</span> Habilidade 5</div>
+                    <div class="skill-content" id="skill-pericia5-content">
+                        <textarea id="pericia5" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia6')"><span class="chevron">›</span> Habilidade 6</div>
+                    <div class="skill-content" id="skill-pericia6-content">
+                        <textarea id="pericia6" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia7')"><span class="chevron">›</span> Habilidade 7</div>
+                    <div class="skill-content" id="skill-pericia7-content">
+                        <textarea id="pericia7" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+                <div class="collapsible-skill">
+                    <div class="skill-label collapsible-title" onclick="toggleSkill('skill-pericia8')"><span class="chevron">›</span> Habilidade 8</div>
+                    <div class="skill-content" id="skill-pericia8-content">
+                        <textarea id="pericia8" placeholder="Técnica" class="auto-expand"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Perícias-->
+        <div class="section full-width collapsible-section" data-section="pericias-section">
+            <div class="section-title collapsible-title" onclick="toggleSection('pericias-section')"><span class="chevron">›</span> Perícias</div>
+            <div class="section-content" id="pericias-section-content">
+                <div class="form-group">
+                    <label for="pericias">Suas Perícias</label>
+                    <textarea id="pericias" placeholder="Perícias" class="auto-expand"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Magia -->
+        <div class="section full-width collapsible-section" data-section="magia-section">
+            <div class="section-title collapsible-title" onclick="toggleSection('magia-section')"><span class="chevron">›</span> Feitiços e Magia</div>
+            <div class="section-content" id="magia-section-content">
+                <div class="form-group">
+                    <label for="magia">Seus Feitiços</label>
+                    <textarea id="magia" placeholder="Liste seus feitiços e magia aqui..." class="auto-expand"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Itens -->
+        <div class="section full-width collapsible-section" data-section="items-section">
+            <div class="section-title collapsible-title" onclick="toggleSection('items-section')"><span class="chevron">›</span> Inventário e Itens</div>
+            <div class="section-content" id="items-section-content">
+                <div style="background: #000000; border: 1px solid #b8001f; padding: 15px; margin-bottom: 15px;">
+                    <span class="point-label">Slots de Inventário</span>
+                    <div class="point-display">
+                        <span class="point-value"><span id="slotsAtual">10</span> / <span id="slotsMax">10</span></span>
+                    </div>
+                    <div class="point-controls">
+                        <button onclick="modificarPonto('slots', -1)">-</button>
+                        <button onclick="modificarPonto('slots', 1)">+</button>
+                    </div>
+                    <div class="point-inputs">
+                        <div class="form-group">
+                            <label>Atual</label>
+                            <input type="number" id="slotsAtualInput" placeholder="10" min="0" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Máximo</label>
+                            <input type="number" id="slotsMaxInput" placeholder="10" min="1" value="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="items">Itens e Equipamento</label>
+                    <textarea id="items" placeholder="Liste seus itens, armas, escudo e equipamento aqui..." class="auto-expand"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aparência e Ideais -->
+        <div class="grid-2">
+            <div class="section collapsible-section" data-section="appearance-section">
+                <div class="section-title collapsible-title" onclick="toggleSection('appearance-section')"><span class="chevron">›</span> Aparência do Personagem</div>
+                <div class="section-content" id="appearance-section-content">
+                    <div class="form-group">
+                        <label for="appearance">Descrição Visual</label>
+                        <textarea id="appearance" placeholder="Descreva a aparência física do seu personagem..." class="auto-expand"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section collapsible-section" data-section="ideals-section">
+                <div class="section-title collapsible-title" onclick="toggleSection('ideals-section')"><span class="chevron">›</span> Ideais e Personalidade</div>
+                <div class="section-content" id="ideals-section-content">
+                    <div class="form-group">
+                        <label for="ideals">Ideais e Traços de Personalidade</label>
+                        <textarea id="ideals" placeholder="Quais são os ideais e traços de personalidade do seu personagem?" class="auto-expand"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background e Notas -->
+        <div class="grid-2">
+            <div class="section collapsible-section" data-section="background-section">
+                <div class="section-title collapsible-title" onclick="toggleSection('background-section')"><span class="chevron">›</span> Antecedente</div>
+                <div class="section-content" id="background-section-content">
+                    <div class="form-group">
+                        <label for="background">Sua História</label>
+                        <textarea id="background" placeholder="Conte a história e o antecedente do seu personagem..." class="auto-expand"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section collapsible-section" data-section="notas-section">
+                <div class="section-title collapsible-title" onclick="toggleSection('notas-section')"><span class="chevron">›</span> Notas e Anotações</div>
+                <div class="section-content" id="notas-section-content">
+                    <div class="form-group">
+                        <label for="notas">Anotações Gerais</label>
+                        <textarea id="notas" placeholder="Espaço livre para suas anotações..." class="auto-expand"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Foto do Personagem -->
+        <div class="section full-width collapsible-section" data-section="photo-section">
+            <div class="section-title collapsible-title" onclick="toggleSection('photo-section')"><span class="chevron">›</span> Foto do Personagem</div>
+            <div class="section-content" id="photo-section-content">
+                <div class="form-group">
+                    <label for="characterPhoto">Selecionar Foto</label>
+                    <input type="file" id="characterPhoto" accept="image/*" onchange="carregarFoto(event)">
+                </div>
+                <div id="photoPreview" style="margin-top: 15px; text-align: center;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Hidden para Arquivo -->
+    <input type="file" id="arquivoInput" accept=".json">
+
+    <!-- Mensagem de Sucesso -->
+    <div class="success-message" id="successMessage">✓ Ficha salva com sucesso!</div>
+    
+    <!-- Notificação de Dado -->
+    <div class="dice-notification" id="diceNotification">
+        <div class="dice-notification-content" id="diceNotificationContent"></div>
+        <button class="dice-notification-close" onclick="fecharNotificacaoDado()">×</button>
+    </div>
+
+    <!-- Secret Easter Egg -->
+    <div class="secret-easter-egg" id="secretEasterEgg">
+        <img src="https://japan-figure.com/cdn/shop/files/Uma-Musume-Pretty-Derby-Kuripan-Plushie-Matikanetannhauser-4580416928335-2.jpg?v=1744003275&width=750" alt="Secret!">
+    </div>
+    <audio id="easterEggSound1" preload="auto"></audio>
+    <audio id="easterEggSound2" preload="auto"></audio>
+
+    <script>
+        // Array de IDs de campos para salvar/carregar
+        const CAMPOS = [
+            'nome', 'classe', 'nivel', 'ca',
+            'corpo', 'agilidade', 'mente', 'espirit', 'presenca',
+            'pvAtual', 'pvMax', 'peAtual', 'peMax', 'sanAtual', 'sanMax',
+            'pvAtualInput', 'pvMaxInput', 'peAtualInput', 'peMaxInput', 'sanAtualInput', 'sanMaxInput',
+            'slotsAtual', 'slotsMax', 'slotsAtualInput', 'slotsMaxInput',
+            'habilidade1', 'pericia1', 'pericia2', 'pericia3', 'pericia4', 'pericia5', 'pericia6', 'pericia7', 'pericia8',
+            'appearance', 'pericias', 'ideals', 'magia', 'items', 'background', 'notas'
+        ];
+
+        // Carregar dados ao iniciar
+        window.addEventListener('load', () => {
+            carregarPersonagem();
+            adicionarEventosAutoSalva();
+            inicializarAutoExpand();
+        });
+
+        // Secret Easter Egg - Ctrl+M
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'm') {
+                e.preventDefault();
+                ativarSecretoEasterEgg();
+            }
+        });
+
+        // Função para auto-salvar em localStorage
+        function adicionarEventosAutoSalva() {
+            CAMPOS.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    elemento.addEventListener('change', salvarParaLocalStorage);
+                    elemento.addEventListener('input', salvarParaLocalStorage);
+                }
+            });
+        }
+
+        // Inicializar auto-expand para textareas
+        function inicializarAutoExpand() {
+            const textareas = document.querySelectorAll('.auto-expand');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    expandTextarea(this);
+                });
+                // Expandir ao carregar se houver conteúdo
+                expandTextarea(textarea);
+            });
+        }
+
+        // Expandir textarea conforme escreve
+        function expandTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max(40, textarea.scrollHeight) + 'px';
+        }
+
+        // Toggle de seções colapsáveis
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const chevron = content.previousElementSibling.querySelector('.chevron');
+            
+            content.classList.toggle('collapsed');
+            chevron.classList.toggle('rotated');
+        }
+
+        // Toggle para skills individuais
+        function toggleSkill(skillId) {
+            const content = document.getElementById(skillId + '-content');
+            const chevron = content.previousElementSibling.querySelector('.chevron');
+            
+            content.classList.toggle('collapsed');
+            chevron.classList.toggle('rotated');
+        }
+
+        // Carregar foto do personagem
+        function carregarFoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fotoData = e.target.result;
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = `<img src="${fotoData}" style="max-width: 300px; max-height: 400px; border: 2px solid #b8001f; padding: 5px;">`;
+                    
+                    // Salvar foto em localStorage
+                    localStorage.setItem('fichaPersonagemFoto', fotoData);
+                    
+                    salvarParaLocalStorage();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Carregar foto salva do localStorage
+        function carregarFotoSalva() {
+            const fotoData = localStorage.getItem('fichaPersonagemFoto');
+            if (fotoData) {
+                const preview = document.getElementById('photoPreview');
+                preview.innerHTML = `<img src="${fotoData}" style="max-width: 300px; max-height: 400px; border: 2px solid #b8001f; padding: 5px;">`;
+            }
+        }
+
+        // Salvar em localStorage
+        function salvarLocal() {
+            const dados = {};
+            CAMPOS.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento && elemento.value !== undefined) {
+                   if (elemento && elemento.value !== undefined) {
+        if (elemento) {
+    let valor;
+
+    if (elemento.value !== undefined) {
+        valor = elemento.value;
+    } else {
+        valor = elemento.textContent;
+    }
+
+    dados[id] = valor || "";
+}
+}
+                }
+            });
+
+            localStorage.setItem('fichaPersonagem', JSON.stringify(dados));
+
+            const msg = document.getElementById('successMessage');
+            msg.textContent = '💾 Salvo localmente';
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 2000);
+        }
+
+        // Carregar do localStorage
+        function carregarPersonagem() {
+            const dados = localStorage.getItem('fichaPersonagem');
+            if (dados) {
+                const personagem = JSON.parse(dados);
+                CAMPOS.forEach(id => {
+                    const elemento = document.getElementById(id);
+                    if (elemento && personagem[id] !== undefined) {
+                        elemento.value = personagem[id];
+                    }
+                });
+            }
+            atualizarExibicaoPontos();
+            // Expandir todos os textareas após carregar
+            document.querySelectorAll('.auto-expand').forEach(ta => expandTextarea(ta));
+            // Carregar foto salva
+            carregarFotoSalva();
+        }
+
+        // Modificar pontos de vida, espírito e sanidade
+            function modificarPonto(tipo, valor) {
+                // Pegamos os elementos de input, que detêm o valor real "cruto"
+                const inputAtual = document.getElementById(tipo + 'AtualInput');
+                const inputMax = document.getElementById(tipo + 'MaxInput');
+                
+                if (!inputAtual || !inputMax) return;
+
+                let valorAtual = parseInt(inputAtual.value) || 0;
+                let valorMaximo = parseInt(inputMax.value) || 0;
+                
+                let novoValor = valorAtual + valor;
+                
+                // Trava o valor entre 0 e o Máximo que VOCÊ definiu no input
+                if (novoValor > valorMaximo) novoValor = valorMaximo;
+                if (novoValor < 0) novoValor = 0;
+                
+                inputAtual.value = novoValor;
+                
+                // Atualiza a interface e salva
+                atualizarExibicaoPontos();
+                salvarParaLocalStorage();
+}
+        // Atualizar exibição dos pontos
+        function atualizarExibicaoPontos() {
+            // PV
+            document.getElementById('pvAtual').textContent = document.getElementById('pvAtualInput').value;
+            document.getElementById('pvMax').textContent = document.getElementById('pvMaxInput').value;
+            
+            // PE
+            document.getElementById('peAtual').textContent = document.getElementById('peAtualInput').value;
+            document.getElementById('peMax').textContent = document.getElementById('peMaxInput').value;
+            
+            // SAN
+            document.getElementById('sanAtual').textContent = document.getElementById('sanAtualInput').value;
+            document.getElementById('sanMax').textContent = document.getElementById('sanMaxInput').value;
+            
+            // SLOTS
+            document.getElementById('slotsAtual').textContent = document.getElementById('slotsAtualInput').value;
+            document.getElementById('slotsMax').textContent = document.getElementById('slotsMaxInput').value;
+        }
+
+        // Detectar mudanças nos inputs de max/atual
+        document.getElementById('pvAtualInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('pvMaxInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('peAtualInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('peMaxInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('sanAtualInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('sanMaxInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('slotsAtualInput').addEventListener('change', atualizarExibicaoPontos);
+        document.getElementById('slotsMaxInput').addEventListener('change', atualizarExibicaoPontos);
+
+        // Salvar como JSON
+        function salvarPersonagem() {
+            const dados = {};
+            CAMPOS.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    dados[id] = elemento.value;
+                }
+            });
+
+            const nome = document.getElementById('nome').value || 'personagem';
+            const link = document.createElement('a');
+            link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(dados, null, 2));
+            link.download = `${nome}_ficha.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            const msg = document.getElementById('successMessage');
+            msg.textContent = '✓ Ficha baixada com sucesso!';
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+
+        // Carregar de JSON
+        document.getElementById('arquivoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const dados = JSON.parse(event.target.result);
+                        CAMPOS.forEach(id => {
+                            const elemento = document.getElementById(id);
+                            if (elemento && dados[id] !== undefined) {
+                                elemento.value = dados[id];
+                            }
+                        });
+                        atualizarExibicaoPontos();
+                        // Expandir todos os textareas após carregar
+                        document.querySelectorAll('.auto-expand').forEach(ta => expandTextarea(ta));
+                        salvarParaLocalStorage();
+
+                        const msg = document.getElementById('successMessage');
+                        msg.textContent = '✓ Ficha carregada com sucesso!';
+                        msg.classList.add('show');
+                        setTimeout(() => msg.classList.remove('show'), 3000);
+                    } catch (erro) {
+                        alert('Erro ao carregar a ficha. Verifique se o arquivo é válido.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            // Limpar o input para permitir carregar o mesmo arquivo novamente
+            e.target.value = '';
+        });
+
+        // Limpar tudo
+        function limparPersonagem() {
+            if (confirm('Tem certeza que deseja limpar toda a ficha? Esta ação não pode ser desfeita.')) {
+                CAMPOS.forEach(id => {
+                    const elemento = document.getElementById(id);
+                    if (elemento) {
+                        elemento.value = '';
+                    }
+                });
+                // Redefini valores padrão
+                document.getElementById('nivel').value = '1';
+                document.getElementById('ca').value = '10';
+                document.getElementById('corpo').value = '10';
+                document.getElementById('agilidade').value = '10';
+                document.getElementById('mente').value = '10';
+                document.getElementById('espirit').value = '10';
+                document.getElementById('presenca').value = '10';
+                document.getElementById('pvAtualInput').value = '20';
+                document.getElementById('pvMaxInput').value = '20';
+                document.getElementById('peAtualInput').value = '15';
+                document.getElementById('peMaxInput').value = '15';
+                document.getElementById('sanAtualInput').value = '10';
+                document.getElementById('sanMaxInput').value = '10';
+                document.getElementById('slotsAtualInput').value = '10';
+                document.getElementById('slotsMaxInput').value = '10';
+                
+                atualizarExibicaoPontos();
+                // Limpar foto salva
+                document.getElementById('photoPreview').innerHTML = '';
+                localStorage.removeItem('fichaPersonagem');
+                localStorage.removeItem('fichaPersonagemFoto');
+            }
+        }
+
+        // Adicionar nova habilidade dinamicamente
+        function adicionarNovaHabilidade() {
+            const container = document.getElementById('skillContainer');
+            const totalSkills = container.querySelectorAll('.form-group').length;
+            const newId = 'pericia' + (totalSkills);
+            
+            const newSkill = document.createElement('div');
+            newSkill.className = 'form-group';
+            newSkill.innerHTML = `
+                <label class="skill-label">Habilidade ${totalSkills}</label>
+                <input type="text" id="${newId}" placeholder="Técnica" class="skill-input-field">
+            `;
+            
+            container.appendChild(newSkill);
+            
+            // Adicionar auto-save ao novo campo
+            const newInput = document.getElementById(newId);
+            newInput.addEventListener('change', salvarParaLocalStorage);
+            newInput.addEventListener('input', salvarParaLocalStorage);
+            
+            // Adicionar ao array de campos para salvar
+            CAMPOS.push(newId);
+        }
+
+        // ===== FUNÇÕES PARA DADOS =====
+        let diceHistory = [];
+
+        // Toggle da sidebar de dados
+        function toggleDiceSidebar() {
+            const sidebar = document.querySelector('.dice-sidebar');
+            const content = document.querySelector('.dice-content');
+            const btn = document.querySelector('.dice-toggle-btn');
+            
+            content.classList.toggle('collapsed');
+            btn.classList.toggle('rotated');
+        }
+
+        // Rolar dados padrão
+        function rolarDados(lados) {
+            const quantityId = `quantityD${lados}`;
+            const quantity = parseInt(document.getElementById(quantityId).value) || 1;
+            
+            let total = 0;
+            const rolls = [];
+            
+            for (let i = 0; i < quantity; i++) {
+                const roll = Math.floor(Math.random() * lados) + 1;
+                rolls.push(roll);
+                total += roll;
+            }
+            
+            exibirResultado(total, `${quantity}d${lados}`, rolls);
+        }
+
+        // Rolar dados customizados
+        function rolarDadosCustom() {
+            const lados = parseInt(document.getElementById('customDiceSides').value) || 20;
+            const quantity = parseInt(document.getElementById('customDiceQuantity').value) || 1;
+            
+            let total = 0;
+            const rolls = [];
+            
+            for (let i = 0; i < quantity; i++) {
+                const roll = Math.floor(Math.random() * lados) + 1;
+                rolls.push(roll);
+                total += roll;
+            }
+            
+            exibirResultado(total, `${quantity}d${lados}`, rolls);
+        }
+
+        // Exibir resultado dos dados
+        function exibirResultado(total, diceNotation, rolls) {
+            const resultElement = document.getElementById('diceResult');
+            const resultValue = document.getElementById('diceResultValue');
+            
+            // Mostrar rolls individuais separados por quebra de linha se houver mais de 1
+            if (rolls.length > 1) {
+                resultValue.innerHTML = rolls.join('<br>');
+            } else {
+                resultValue.textContent = rolls[0];
+            }
+            resultElement.style.display = 'flex';
+            
+            // Mostrar notificação com rolls individuais
+            const notification = document.getElementById('diceNotification');
+            const notificationContent = document.getElementById('diceNotificationContent');
+            const rollsText = rolls.length > 1 ? `[${rolls.join(', ')}]` : rolls[0];
+            notificationContent.textContent = `${diceNotation}: ${rollsText}`;
+            notification.classList.add('show');
+            
+            // Adicionar ao histórico com soma
+            const now = new Date().toLocaleTimeString('pt-BR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const historyItem = `${now} - ${diceNotation}: ${rolls.join(' + ')} = ${total}`;
+            diceHistory.unshift(historyItem);
+            
+            // Manter apenas os últimos 10 rolls
+            if (diceHistory.length > 10) {
+                diceHistory.pop();
+            }
+            
+            atualizarHistorico();
+        }
+
+        // Fechar notificação de dado
+        function fecharNotificacaoDado() {
+            const notification = document.getElementById('diceNotification');
+            notification.classList.remove('show');
+        }
+
+        // Atualizar exibição do histórico
+        function atualizarHistorico() {
+            const historyElement = document.getElementById('diceHistory');
+            historyElement.innerHTML = diceHistory.map(item => 
+                `<div class="dice-history-item">${item}</div>`
+            ).join('');
+        }
+
+        // Secret Easter Egg Function
+        function ativarSecretoEasterEgg() {
+            const easterEgg = document.getElementById('secretEasterEgg');
+            
+            // Mostrar a imagem
+            easterEgg.style.display = 'block';
+            
+            // Remover a imagem após a animação
+            setTimeout(() => {
+                easterEgg.style.display = 'none';
+            }, 600);
+            
+            // Tocar sons
+            tocarSonsEasterEgg();
+        }
+
+        // Tocar sons do Easter Egg
+        function tocarSonsEasterEgg() {
+            const sound1 = document.getElementById('easterEggSound1');
+            const sound2 = document.getElementById('easterEggSound2');
+            
+            // Usar arquivos de som locais
+            sound1.src = 'sound/Flashbang - Sound Effect.mp3';
+            sound2.src = 'sound/Mambo - Sound Effect (HD).mp3';
+            
+            // Ajustar volumes
+            sound1.volume = 0.5;
+            sound2.volume = 1.0;
+            
+            sound1.play().catch(() => console.log('Não foi possível tocar som 1'));
+            
+            // Tocar o segundo som logo após o primeiro
+            setTimeout(() => {
+                sound2.play().catch(() => console.log('Não foi possível tocar som 2'));
+            }, 200);
+        }
+
+        // ===== FIREBASE CLOUD STORAGE =====
+        let db = null;
+        let auth = null;
+        let usuarioAtual = null;
+        let caracterAtual = 'ficha_padrao';
+        let autoSaveNuvem = true;
+
+        // Inicializar Firebase
+        function inicializarFirebase() {
+            try {
+                // Verificar se Firebase está disponível
+                if (typeof firebase === 'undefined') {
+                    console.warn('Firebase SDK não carregou ainda. Aguardando...');
+                    setTimeout(inicializarFirebase, 500); // Tentar novamente em 500ms
+                    return false;
+                }
+
+                if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.includes('SUA_API_KEY')) {
+                    console.log('Firebase não configurado. Configure firebase-config.js para ativar sincronização na nuvem.');
+                    return false;
+                }
+
+                firebase.initializeApp(FIREBASE_CONFIG);
+                db = firebase.firestore();
+                auth = firebase.auth();
+
+                // Monitorar mudanças de autenticação
+                auth.onAuthStateChanged((user) => {
+                    usuarioAtual = user;
+                    atualizarInterfaceCloud();
+                    
+                    if (user) {
+                        console.log('Usuário autenticado:', user.email || 'Anônimo');
+                        // Auto-load dos dados da nuvem quando faz login
+                        setTimeout(() => {
+                            carregarDadosNuvemAutomatico();
+                        }, 500);
+                    }
+                });
+
+                return true;
+            } catch (erro) {
+                console.error('Erro ao inicializar Firebase:', erro);
+                return false;
+            }
+        }
+
+        // Abrir modal de login
+        function abrirLoginModal() {
+            document.getElementById('cloudModal').classList.add('show');
+        }
+
+        // Fechar modal de login
+        function fecharLoginModal() {
+            document.getElementById('cloudModal').classList.remove('show');
+            document.getElementById('cloudError').textContent = '';
+        }
+
+        // Mudar aba do login
+        function mudarAbaLogin(aba) {
+            document.querySelectorAll('.cloud-tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.cloud-tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`cloud-tab-${aba}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Login com Email
+        function loginComEmail() {
+            const email = document.getElementById('cloudEmail').value;
+            const password = document.getElementById('cloudPassword').value;
+            const errorDiv = document.getElementById('cloudError');
+
+            if (!auth) {
+                errorDiv.textContent = 'Firebase ainda está carregando. Tente novamente.';
+                return;
+            }
+
+            if (!email || !password) {
+                errorDiv.textContent = 'Email e senha são obrigatórios';
+                return;
+            }
+
+            errorDiv.textContent = 'Entrando...';
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    console.log('Login bem-sucedido');
+                    fecharLoginModal();
+                    errorDiv.textContent = '';
+                })
+                .catch((error) => {
+                    console.error('Erro de login:', error.message);
+                    if (error.code === 'auth/user-not-found') {
+                        errorDiv.textContent = 'Email não encontrado. Crie uma conta!';
+                    } else if (error.code === 'auth/wrong-password') {
+                        errorDiv.textContent = 'Senha incorreta';
+                    } else {
+                        errorDiv.textContent = error.message;
+                    }
+                });
+        }
+
+        // Registrar com Email
+        function registrarComEmail() {
+            const email = document.getElementById('cloudEmail').value;
+            const password = document.getElementById('cloudPassword').value;
+            const errorDiv = document.getElementById('cloudError');
+
+            if (!auth) {
+                errorDiv.textContent = 'Firebase ainda está carregando. Tente novamente.';
+                return;
+            }
+
+            if (!email || !password) {
+                errorDiv.textContent = 'Email e senha são obrigatórios';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.textContent = 'Senha deve ter pelo menos 6 caracteres';
+                return;
+            }
+
+            errorDiv.textContent = 'Criando conta...';
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    console.log('Conta criada com sucesso');
+                    fecharLoginModal();
+                    errorDiv.textContent = '';
+                })
+                .catch((error) => {
+                    console.error('Erro ao registrar:', error.message);
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorDiv.textContent = 'Este email já está registrado';
+                    } else {
+                        errorDiv.textContent = error.message;
+                    }
+                });
+        }
+
+        // Login Anônimo
+        function loginAnonimo() {
+            const errorDiv = document.getElementById('cloudError');
+
+            if (!auth) {
+                errorDiv.textContent = 'Firebase ainda está carregando. Tente novamente.';
+                return;
+            }
+
+            errorDiv.textContent = 'Entrando como anônimo...';
+            
+            auth.signInAnonymously()
+                .then(() => {
+                    console.log('Login anônimo bem-sucedido');
+                    fecharLoginModal();
+                    errorDiv.textContent = '';
+                })
+                .catch((error) => {
+                    console.error('Erro de login anônimo:', error.message);
+                    errorDiv.textContent = error.message;
+                });
+        }
+        
+
+        // Fazer Logout
+        function fazerLogout() {
+            if (!auth) {
+                alert('Firebase ainda está carregando.');
+                return;
+            }
+
+            if (confirm('Tem certeza que quer desconectar da nuvem?')) {
+                auth.signOut().then(() => {
+                    console.log('Logout realizado');
+                    usuarioAtual = null;
+                    atualizarInterfaceCloud();
+                }).catch((error) => {
+                    console.error('Erro ao fazer logout:', error);
+                });
+            }
+        }
+
+        // Atualizar interface baseado em status de login
+        function atualizarInterfaceCloud() {
+            const loginBtn = document.getElementById('cloudLoginBtn');
+            const logoutBtn = document.getElementById('cloudLogoutBtn');
+            const statusText = document.getElementById('cloudStatusText');
+            const userInfo = document.getElementById('cloudUserInfo');
+            const indicator = document.getElementById('cloudSyncIndicator');
+            const btnSalvarNuvem = document.getElementById('btnSalvarNuvem');
+            const btnCarregarNuvem = document.getElementById('btnCarregarNuvem');
+
+            if (usuarioAtual) {
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                statusText.textContent = 'Nuvem: Conectado';
+                indicator.textContent = '●';
+                indicator.classList.add('connected');
+                indicator.classList.remove('connected');
+                void indicator.offsetWidth; // Reflow
+                indicator.classList.add('connected');
+                
+                const email = usuarioAtual.email || 'anônimo';
+                userInfo.textContent = `[${email}]`;
+                
+                btnSalvarNuvem.style.display = 'block';
+                btnCarregarNuvem.style.display = 'block';
+                
+                // Ativar auto-save para nuvem
+                autoSaveNuvem = true;
+            } else {
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                statusText.textContent = 'Nuvem: Desconectado';
+                indicator.textContent = '●';
+                indicator.classList.remove('connected');
+                userInfo.textContent = '';
+                
+                btnSalvarNuvem.style.display = 'none';
+                btnCarregarNuvem.style.display = 'none';
+                
+                autoSaveNuvem = false;
+            }
+        }
+
+        // Salvar na Nuvem (Firestore)
+        function salvarPersonagemNuvem() {
+            if (!usuarioAtual || !db) {
+                alert('Você precisa estar conectado à nuvem para salvar lá');
+                abrirLoginModal();
+                return;
+            }
+
+            const dados = {};
+           CAMPOS.forEach(id => {
+    const elemento = document.getElementById(id);
+
+    if (elemento) {
+        let valor;
+
+        if (elemento.value !== undefined) {
+            valor = elemento.value;
+        } else {
+            valor = elemento.textContent;
+        }
+
+        dados[id] = valor || "";
+    }
+});
+
+            const nomeCaracter = document.getElementById('nome').value || 'Personagem';
+            const indicador = document.getElementById('cloudSyncIndicator');
+            
+            indicador.textContent = '↻';
+            indicador.classList.add('syncing');
+
+            db.collection('users').doc(usuarioAtual.uid)
+                .collection('characters').doc(caracterAtual)
+                .set({
+                    nome: nomeCaracter,
+                    dados: dados,
+                    ultimaAtualizacao: new Date(),
+                    sincronizado: true
+                }, { merge: true })
+                .then(() => {
+                    console.log('Dados salvos na nuvem com sucesso');
+                    indicador.textContent = '●';
+                    indicador.classList.remove('syncing');
+                    
+                    const msg = document.getElementById('successMessage');
+                    msg.textContent = 'Ficha sincronizada na nuvem!';
+                    msg.classList.add('show');
+                    setTimeout(() => msg.classList.remove('show'), 3000);
+                })
+                .catch((error) => {
+                    console.error('Erro ao salvar dados na nuvem:', error);
+                    indicador.textContent = '●';
+                    indicador.classList.remove('syncing');
+                    alert('Erro ao sincronizar com a nuvem: ' + error.message);
+                });
+        }
+
+        // Carregar da Nuvem (Firestore)
+        function carregarPersonagemNuvem() {
+            if (!usuarioAtual || !db) {
+                alert('Você precisa estar conectado à nuvem para carregar de lá');
+                abrirLoginModal();
+                return;
+            }
+
+            const indicador = document.getElementById('cloudSyncIndicator');
+            indicador.textContent = '↻';
+            indicador.classList.add('syncing');
+
+            db.collection('users').doc(usuarioAtual.uid)
+                .collection('characters').doc(caracterAtual)
+                .get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const dados = doc.data().dados;
+                        CAMPOS.forEach(id => {
+                            const elemento = document.getElementById(id);
+                            if (elemento && dados[id] !== undefined) {
+                                elemento.value = dados[id];
+                            }
+                        });
+                        atualizarExibicaoPontos();
+                        document.querySelectorAll('.auto-expand').forEach(ta => expandTextarea(ta));
+                        
+                        indicador.textContent = '●';
+                        indicador.classList.remove('syncing');
+                        
+                        const msg = document.getElementById('successMessage');
+                        msg.textContent = '☁️ Ficha carregada da nuvem!';
+                        msg.classList.add('show');
+                        setTimeout(() => msg.classList.remove('show'), 3000);
+                    } else {
+                        indicador.textContent = '●';
+                        indicador.classList.remove('syncing');
+                        alert('Nenhuma ficha salva encontrada na nuvem');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Erro ao carregar dados da nuvem:', error);
+                    indicador.textContent = '●';
+                    indicador.classList.remove('syncing');
+                    alert('Erro ao carregar da nuvem: ' + error.message);
+                });
+        }
+
+        // Carregar dados automaticamente quando sincronizações ocorrem
+            function modificarPonto(tipo, valor) {
+                // 1. Buscamos os IDs corretos dos INPUTS de texto
+                const atualInputId = tipo + 'AtualInput'; 
+                const maxInputId = tipo + 'MaxInput';
+                
+                const inputAtual = document.getElementById(atualInputId);
+                const inputMax = document.getElementById(maxInputId);
+                
+                if (!inputAtual || !inputMax) return;
+
+                // 2. Pegamos os valores numéricos direto dos campos de digitação
+                let valorAtual = parseInt(inputAtual.value) || 0;
+                let valorMaximo = parseInt(inputMax.value) || 0;
+                
+                let novoValor = valorAtual + valor;
+                
+                // 3. A trava agora respeita o que VOCÊ digitou no input de máximo
+                if (novoValor > valorMaximo) novoValor = valorMaximo;
+                if (novoValor < 0) novoValor = 0;
+                
+                // 4. Atualiza o campo de texto
+                inputAtual.value = novoValor;
+                
+                // 5. Atualiza a tela e manda para o LocalStorage/Nuvem
+                atualizarExibicaoPontos();
+                salvarParaLocalStorage();
+            }
+
+        // Auto-save na nuvem quando em localStorage
+            function salvarParaLocalStorage() {
+                salvarLocal();
+
+                // Auto-save na nuvem se estiver conectado
+                if (usuarioAtual && db && autoSaveNuvem) {
+                    clearTimeout(window.timeoutSalvarNuvem);
+                    window.timeoutSalvarNuvem = setTimeout(() => {
+                        salvarPersonagemNuvem();
+                    }, 2000);
+                }
+            }
+            
+            // Auto-save na nuvem se estiver conectado
+            if (usuarioAtual && db && autoSaveNuvem) {
+                // Debounce para não fazer muitas requisições
+                clearTimeout(window.timeoutSalvarNuvem);
+                window.timeoutSalvarNuvem = setTimeout(() => {
+                    salvarPersonagemNuvem();
+                }, 2000); // Salvar na nuvem a cada 2 segundos de inatividade
+            }
+        
+
+        // Aguardar Firebase estar pronto e inicializar
+        function esperarFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length === 0) {
+                console.log('Firebase pronto, inicializando...');
+                inicializarFirebase();
+                atualizarInterfaceCloud();
+            } else if (typeof firebase === 'undefined') {
+                console.log('Aguardando Firebase carregar...');
+                setTimeout(esperarFirebase, 300);
+            }
+        }
+
+        // Inicializar Firebase ao carregar página
+        window.addEventListener('load', () => {
+            esperarFirebase();
+        });
+    </script>
+</body>
+</html>
